@@ -32,7 +32,7 @@ apt install -y --no-install-recommends \
     wget \
     gnupg \
     ca-certificates \
-    locales \
+    locales-all \
     procps \
     apt-transport-https \
     e2fsprogs \
@@ -41,6 +41,9 @@ apt install -y --no-install-recommends \
     vim-tiny \
     less
 locale-gen en_US.UTF-8
+apt autoremove -y
+apt clean
+rm -rf /var/lib/apt/lists/*
 EOF
 
 # Install network packages
@@ -56,6 +59,9 @@ apt install -y --no-install-recommends \
     wireguard-tools \
     iptables \
     bridge-utils
+apt autoremove -y
+apt clean
+rm -rf /var/lib/apt/lists/*
 EOF
 
 # Add Proxmox VE repository
@@ -83,16 +89,14 @@ apt install -y \
     chrony \
     xfsprogs \
     pve-edk2-firmware
-EOF
 
 # Cleanup
-RUN <<EOF
 apt remove -y os-prober || true
 apt purge -y network-manager || true
 apt autoremove -y
 apt clean
-rm -f /etc/apt/sources.list.d/pve-enterprise.sources || true
 rm -rf /var/lib/apt/lists/*
+rm -f /etc/apt/sources.list.d/pve-enterprise.sources || true
 rm -rf /usr/lib/modules/*
 find /var/log -type f -delete
 EOF
