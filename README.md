@@ -1,10 +1,10 @@
-# Proxmox VE inside Docker
+# Proxmox VE inside container.
 
-Run Proxmox in a container. Don't ask why.
+Run Proxmox inside Docker or Podman easily with this setup. KVM and LXC work out of the box.
 
 ## Requirements
 
-- Modern Linux host with kernel 6.14+
+- A modern Linux host with kernel 6.8+
 - [Docker Engine](https://docs.docker.com/engine/install/) (obviously)
 - A machine that supports virtualization
 - Patience
@@ -12,11 +12,12 @@ Run Proxmox in a container. Don't ask why.
 ## Quick Start
 
 ```bash
-docker run -d --name proxmox --hostname proxmox \
+docker run -d --name pve-1 --hostname pve-1 \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
     --restart unless-stopped  \
-    --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+    --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup \
     -v /usr/lib/modules:/usr/lib/modules:ro \
+    -v /sys/kernel/security:/sys/kernel/security \
     -v ./VM-Backup:/var/lib/vz/dump \
     -v ./ISOs:/var/lib/vz/template/iso \
     ghcr.io/longqt-sea/proxmox-ve
@@ -25,49 +26,84 @@ Replace `./ISOs` with the path to your ISO folder.
 
 Set root password and reboot the container at least once:
 ```
-docker exec -it proxmox passwd
-docker restart proxmox
+docker exec -it pve-1 passwd
+docker restart pve-1
 ```
 
-## Docker Compose
+## Docker Compose (recommended)
 
-Here is `docker-compose.yml` if you prefer:
+Here is a `docker-compose.yml` for two nodes on the same network, sharing ISOs and Backup directory:
 ```yaml
 services:
-  proxmox:
+  pve-1:
     image: ghcr.io/longqt-sea/proxmox-ve
-    container_name: proxmox
-    hostname: proxmox
+    container_name: pve-1
+    hostname: pve-1
     privileged: true
     restart: unless-stopped
     cgroup: host
     ports:
       - "2222:22"
       - "3128:3128"
-      - "8006:8006"
+      - "8006:8006"   # First node is listening on 8006
+    networks:
+      - dual_stack
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /usr/lib/modules:/usr/lib/modules
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - /usr/lib/modules:/usr/lib/modules:ro
+      - /sys/kernel/security:/sys/kernel/security
       - ./VM-Backup:/var/lib/vz/dump
-      - ./ISOs:/var/lib/vz/template/iso  # Replace with your ISO folder path
+      - ./ISOs:/var/lib/vz/template/iso  # Replace ./ISOs with the path to your ISO folder
+
+  pve-2:
+    image: ghcr.io/longqt-sea/proxmox-ve
+    container_name: pve-2
+    hostname: pve-2
+    privileged: true
+    restart: unless-stopped
+    cgroup: host
+    ports:
+      - "2223:22"
+      - "3129:3128"
+      - "8007:8006"   # Second node is listening on 8007
+    networks:
+      - dual_stack
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - /usr/lib/modules:/usr/lib/modules:ro
+      - /sys/kernel/security:/sys/kernel/security
+      - ./VM-Backup:/var/lib/vz/dump
+      - ./ISOs:/var/lib/vz/template/iso  # Replace ./ISOs with the path to your ISO folder
+
+networks:
+  dual_stack:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: fd00::/48
 ```
 Bring it up:
-```bash
+```
 docker compose up -d
 ```
-Set root password and reboot the container at least once:
+Set root password for both nodes:
 ```
-docker exec -it proxmox passwd
-docker restart proxmox
+docker exec -it pve-1 passwd
+docker exec -it pve-2 passwd
+```
+Reboot both nodes at least once:
+```
+docker restart pve-1 pve-2
 ```
 
 ## Ports
 
-| Port | What it does |
+| Port | Purpose |
 |------|--------------|
 | 8006 | Web UI |
 | 3128 | SPICE proxy |
-| 2222 | SSH |
+| 22 | SSH |
 
 ## Access
 
@@ -82,8 +118,8 @@ Open `https://localhost:8006` in your browser. Accept the self-signed cert warni
 
 ## Networks
 
-- `vmbr0` - Empty bridge, configure it yourself, maybe with macvlan or passthrough a physical NIC
-- `vmbr1` - NAT network for VM (172.16.99.0/24), works out of the box
+- `vmbr1` - NAT network for VM and LXC, works out of the box
+- `vmbr2` - Empty bridge, configure it yourself, maybe with macvlan, veth or passthrough a physical NIC
 
 ---
 

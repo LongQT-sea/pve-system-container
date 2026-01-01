@@ -4,16 +4,7 @@ iface lo inet loopback
 # Docker/Podman managed this interface
 iface eth0 inet manual
 
-# Static LAN bridge (change 'bridge-ports' to a macvlan or physical LAN interface if needed)
-auto vmbr0
-iface vmbr0 inet static
-#        address 192.168.0.250/24
-#        gateway 192.168.0.1
-        bridge-ports none
-        bridge-stp off
-        bridge-fd 0
-
-# NAT bridge for VMs if vmbr0 not connected to physical LAN network
+# NAT bridge for VMs if vmbr2 not connected to physical LAN network
 auto vmbr1
 iface vmbr1 inet static
         address 172.16.99.1/24
@@ -39,5 +30,15 @@ iface vmbr1 inet6 static
         # Prevent DNS leaks
         up    ip6tables -t nat -A PREROUTING -i vmbr1 -p udp --dport 53 -j REDIRECT --to-ports 53
         up    ip6tables -t nat -A PREROUTING -i vmbr1 -p tcp --dport 53 -j REDIRECT --to-ports 53
+#NAT bridge
+
+# Empty bridge, replace 'none' with macvlan, veth or physical interface to connect to physical LAN if needed
+auto vmbr2
+iface vmbr2 inet static
+#        address 192.168.0.250/24
+#        gateway 192.168.0.1
+        bridge-ports none
+        bridge-stp off
+        bridge-fd 0
 
 source /etc/network/interfaces.d/*

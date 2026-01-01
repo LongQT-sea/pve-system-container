@@ -7,7 +7,15 @@
 # docker build -t proxmox-ve:latest .
 #
 # Run:
-# docker run -d --name proxmox --hostname proxmox -p 3128:3128 -p 8006:8006 --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v /usr/lib/modules:/usr/lib/modules --security-opt seccomp=profile.json --restart unless-stopped proxmox-ve:latest
+# docker run -d --name pve-1 --hostname pve-1 \
+#     -p 2222:22 -p 3128:3128 -p 8006:8006 \
+#     --restart unless-stopped  \
+#     --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup \
+#     -v /usr/lib/modules:/usr/lib/modules:ro \
+#     -v /sys/kernel/security:/sys/kernel/security \
+#     -v ./VM-Backup:/var/lib/vz/dump \
+#     -v ./ISOs:/var/lib/vz/template/iso \
+#     proxmox-ve
 
 FROM debian:13
 
@@ -33,11 +41,11 @@ apt install -y --no-install-recommends \
     gnupg \
     ca-certificates \
     locales \
-    locales-all \
     procps \
     apt-transport-https \
     e2fsprogs \
     btrfs-progs \
+    ntfs-3g \
     nano \
     vim-tiny \
     less
@@ -144,6 +152,24 @@ EOF
 
 # Config OpenSSH
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Config LXC
+RUN <<EOF
+sed -i 's/^ConditionVirtualization=!container/#&/' /lib/systemd/system/lxcfs.service
+cat > /etc/rc.local <<'EOF1'
+#!/bin/bash
+# Add loop devices for LXC
+modprobe loop
+for i in $(seq 0 50); do
+  if [ ! -e /dev/loop$i ]; then
+    mknod -m 0660 /dev/loop$i b 7 $i
+  fi
+done
+
+exit 0
+EOF1
+chmod +x /etc/rc.local
+EOF
 
 # Default share volumes
 VOLUME "/usr/lib/modules" "/sys/fs/cgroup"
