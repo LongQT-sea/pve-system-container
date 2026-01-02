@@ -1,13 +1,17 @@
-# Proxmox VE inside container.
+# Proxmox VE inside container
+Proxmox cluster in Docker. Learn, test, break, repeat.
 
-Run Proxmox inside Docker or Podman easily with this setup. KVM and LXC work out of the box.
+- **Fast iteration** — Spin up, tear down, repeat in seconds
+- **Cluster simulation** — Test HA, failover, and live migration
+- **Automation testing** — Validate Terraform, Ansible, or scripts
+- **Shared storage** — Mount ISOs, backups, disk images volume across nodes
+- **KVM and LXC** support out of the box
 
 ## Requirements
 
 - A modern Linux host with kernel 6.8+
 - [Docker Engine](https://docs.docker.com/engine/install/) (obviously)
-- A machine that supports virtualization
-- Patience
+- CPU with virtualization support (Intel VT-x / AMD-V)
 
 ## Quick Start
 
@@ -30,9 +34,16 @@ docker exec -it pve-1 passwd
 docker restart pve-1
 ```
 
-## Docker Compose (recommended)
+Access the web UI at `https://localhost:8006` (accept the self-signed cert).
 
-Here is a `docker-compose.yml` for two nodes on the same network, sharing ISOs and Backup directory:
+## Multi-Node Cluster with Docker Compose (recommended)
+A 3-node HA cluster sharing ISOs and backups setup:
+```
+mkdir pve_cluster && cd pve_cluster
+
+nano docker-compose.yml
+```
+Paste the content below into nano, save with Ctrl+X, Y, Enter.
 ```yaml
 services:
   pve-1:
@@ -45,7 +56,7 @@ services:
     ports:
       - "2222:22"
       - "3128:3128"
-      - "8006:8006"   # First node is listening on 8006
+      - "8006:8006"   # First node Web GUI is listening on 8006
     networks:
       - dual_stack
     volumes:
@@ -65,7 +76,27 @@ services:
     ports:
       - "2223:22"
       - "3129:3128"
-      - "8007:8006"   # Second node is listening on 8007
+      - "8007:8006"   # Second node Web GUI is listening on 8007
+    networks:
+      - dual_stack
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - /usr/lib/modules:/usr/lib/modules:ro
+      - /sys/kernel/security:/sys/kernel/security
+      - ./VM-Backup:/var/lib/vz/dump
+      - ./ISOs:/var/lib/vz/template/iso  # Replace ./ISOs with the path to your ISO folder
+
+  pve-3:
+    image: ghcr.io/longqt-sea/proxmox-ve
+    container_name: pve-3
+    hostname: pve-3
+    privileged: true
+    restart: unless-stopped
+    cgroup: host
+    ports:
+      - "2224:22"
+      - "3130:3128"
+      - "8008:8006"   # Third node Web GUI is listening on 8008
     networks:
       - dual_stack
     volumes:
@@ -87,14 +118,19 @@ Bring it up:
 ```
 docker compose up -d
 ```
-Set root password for both nodes:
+Set root password for all nodes:
 ```
 docker exec -it pve-1 passwd
 docker exec -it pve-2 passwd
+docker exec -it pve-3 passwd
 ```
-Reboot both nodes at least once:
+Reboot all nodes at least once:
 ```
-docker restart pve-1 pve-2
+docker restart pve-1 pve-2 pve-3
+```
+Tear down cluster:
+```
+docker compose down
 ```
 
 ## Ports
@@ -104,10 +140,6 @@ docker restart pve-1 pve-2
 | 8006 | Web UI |
 | 3128 | SPICE proxy |
 | 22 | SSH |
-
-## Access
-
-Open `https://localhost:8006` in your browser. Accept the self-signed cert warning. Default login is `root` with whatever password you set.
 
 ## Volumes
 
