@@ -62,15 +62,17 @@ services:
     restart: unless-stopped
     cgroup: host
     networks:
-      - dual_stack
-    
+      dual_stack:
+        ipv4_address: 10.0.99.1
+        ipv6_address: fd00::1
+
     # Port mapping only required for Docker Desktop or LAN access from other machines.
     # On Linux host, you can access this node directly via hostname or IP address, e.g. https://pve-1:8006 or https://[fd00::1]:8006
     ports:
       - "2222:22"
       - "3128:3128"
       - "8006:8006"   # First node Web GUI is listening on localhost:8006
-    
+
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
       - /usr/lib/modules:/usr/lib/modules:ro
@@ -88,15 +90,17 @@ services:
     restart: unless-stopped
     cgroup: host
     networks:
-      - dual_stack
-    
+      dual_stack:
+        ipv4_address: 10.0.99.2
+        ipv6_address: fd00::2
+
     # Port mapping only required for Docker Desktop or LAN access from other machines.
     # On Linux host, you can access this node directly via hostname or IP address, e.g. https://pve-2:8006 or https://[fd00::2]:8006
     ports:
       - "2223:22"
       - "3129:3128"
       - "8007:8006"   # Second node Web GUI is listening on localhost:8007
-    
+
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
       - /usr/lib/modules:/usr/lib/modules:ro
@@ -114,15 +118,17 @@ services:
     restart: unless-stopped
     cgroup: host
     networks:
-      - dual_stack
-    
+      dual_stack:
+        ipv4_address: 10.0.99.3
+        ipv6_address: fd00::3
+
     # Port mapping only required for Docker Desktop or LAN access from other machines.
     # On Linux host, you can access this node directly via hostname or IP address, e.g. https://pve-3:8006 or https://[fd00::3]:8006
     ports:
       - "2224:22"
       - "3130:3128"
       - "8008:8006"   # Third node Web GUI is listening on localhost:8008
-    
+
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
       - /usr/lib/modules:/usr/lib/modules:ro
@@ -146,8 +152,10 @@ services:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
     networks:
-      - dual_stack
-    
+      dual_stack:
+        ipv4_address: 10.0.99.4
+        ipv6_address: fd00::4
+
     # Port mapping only required for Docker Desktop or LAN access from other machines.
     # On Linux host, you can access this container directly via hostname or IP address, e.g. https://pdm:8443 or https://[fd00::4]:8443
     ports:

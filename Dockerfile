@@ -104,7 +104,6 @@ apt update
 apt install -y --no-install-recommends \
     postfix \
     open-iscsi \
-    chrony \
     xfsprogs \
     zfs-zed \
     numactl \
@@ -253,6 +252,7 @@ EOF
 
 # Config custom bash aliases
 RUN <<EOF cat >> /etc/bash.bashrc
+
 alias ls='ls --color=auto'
 alias l='ls -lah'
 alias ll='ls -lh'
