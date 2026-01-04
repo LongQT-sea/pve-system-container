@@ -1,4 +1,4 @@
-name: Build Proxmox VE
+name: Build Proxmox Datacenter Manager
 
 on:
   schedule:
@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/proxmox-ve
+  IMAGE_NAME: ${{ github.repository_owner }}/proxmox-datacenter-manager
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./proxmox-datacenter-manager
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
