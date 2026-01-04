@@ -219,6 +219,7 @@ docker compose down -t 0
 
 > [!Note]
 > When running with `podman`, make sure to run as root or with `sudo`, rootless Podman does not work even with `--privileged`.
+
 > [!Warning]
 > This setup uses the `--privileged` flag. The container can do almost everything the Linux host can do. Use with caution.
 
