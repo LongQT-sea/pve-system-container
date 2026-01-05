@@ -1,4 +1,4 @@
-# Proxmox VE and Datacenter Manager inside container
+# Overview
 Proxmox cluster in Docker. Learn, test, break, repeat.
 
 - **Fast iteration** — Spin up, tear down, repeat in seconds
@@ -6,6 +6,8 @@ Proxmox cluster in Docker. Learn, test, break, repeat.
 - **Automation testing** — Validate Terraform, Ansible, or scripts
 - **Shared storage** — Mount ISOs, backups, disk images volume across nodes
 - **KVM and LXC** — Works out of the box
+- **Central management** — [Proxmox Datacenter Manager](proxmox-datacenter-manager) in Docker
+- **[ARM64 support](pxvirt)** — Run Proxmox VE on your favorite ARM platform, powered by [PXVIRT](https://docs.pxvirt.lierfang.com/en/README.html)
 
 ---
 
@@ -39,7 +41,7 @@ docker exec -it pve-1 passwd
 docker restart pve-1
 ```
 
-Access the web UI at `https://localhost:8006` (accept the self-signed cert).
+Access the web UI at `https://Docker-IP:8006` (accept the self-signed cert).
 
 ---
 
@@ -50,6 +52,7 @@ mkdir pve_cluster && cd pve_cluster
 
 nano docker-compose.yml
 ```
+
 Paste the content below into nano, save with Ctrl+X, Y, Enter.
 ```yaml
 services:
@@ -67,12 +70,12 @@ services:
         ipv6_address: fd00::1
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address,
-    # e.g. https://pve-1:8006 or https://[fd00::1]:8006
+    # On Linux host, you can access this node directly via hostname or IP address:
+    # https://10.0.99.1:8006 or https://[fd00::1]:8006
     ports:
       - "2222:22"
       - "3128:3128"
-      - "8006:8006"   # First node Web GUI is listening on localhost:8006
+      - "8006:8006"   # First node Web GUI is listening on port 8006
 
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
@@ -96,12 +99,12 @@ services:
         ipv6_address: fd00::2
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address,
-    # e.g. https://pve-2:8006 or https://[fd00::2]:8006
+    # On Linux host, you can access this node directly via IP address:
+    # https://10.0.99.2:8006 or https://[fd00::2]:8006
     ports:
       - "2223:22"
       - "3129:3128"
-      - "8007:8006"   # Second node Web GUI is listening on localhost:8007
+      - "8007:8006"   # Second node Web GUI is listening on port 8007
 
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
@@ -125,12 +128,12 @@ services:
         ipv6_address: fd00::3
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address,
-    # e.g. https://pve-3:8006 or https://[fd00::3]:8006
+    # On Linux host, you can access this node directly via IP address:
+    # https://10.0.99.3:8006 or https://[fd00::3]:8006
     ports:
       - "2224:22"
       - "3130:3128"
-      - "8008:8006"   # Third node Web GUI is listening on localhost:8008
+      - "8008:8006"   # Third node Web GUI is listening on port 8008
 
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
@@ -160,8 +163,8 @@ services:
         ipv6_address: fd00::4
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this container directly via hostname or IP address,
-    # e.g. https://pdm:8443 or https://[fd00::4]:8443
+    # On Linux host, you can access this container directly via IP address:
+    # https://10.0.99.4:8443 or https://[fd00::4]:8443
     ports:
       - "2225:22"
       - "8443:8443"
@@ -191,6 +194,8 @@ Restart all nodes at least once:
 ```
 docker restart -t 5 pve-1 pve-2 pve-3
 ```
+> [!Tip]
+> On Docker Desktop (Windows/macOS), use different browser profiles for each node to avoid cookie clashing ("invalid PVE ticket 401" error).
 
 Nodes can reach each other over hostname or IP address:
 | hostname | IPv4       | IPv6    |
