@@ -143,6 +143,9 @@ systemctl mask \
     watchdog-mux.service || true
 EOF
 
+# Prevent Docker DNS NAT rules from being flushed when using user-defined bridge
+RUN systemctl disable nftables.service
+
 # Prevent pvenetcommit from overwriting /etc/network/interfaces
 RUN rm -f /etc/network/interfaces.new
 

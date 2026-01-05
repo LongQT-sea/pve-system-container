@@ -5,7 +5,7 @@ Proxmox cluster in Docker. Learn, test, break, repeat.
 - **Cluster simulation** — Test HA, failover, and live migration
 - **Automation testing** — Validate Terraform, Ansible, or scripts
 - **Shared storage** — Mount ISOs, backups, disk images volume across nodes
-- **KVM and LXC** — Work out of the box
+- **KVM and LXC** — Works out of the box
 
 ---
 
@@ -67,7 +67,8 @@ services:
         ipv6_address: fd00::1
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address, e.g. https://pve-1:8006 or https://[fd00::1]:8006
+    # On Linux host, you can access this node directly via hostname or IP address,
+    # e.g. https://pve-1:8006 or https://[fd00::1]:8006
     ports:
       - "2222:22"
       - "3128:3128"
@@ -95,7 +96,8 @@ services:
         ipv6_address: fd00::2
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address, e.g. https://pve-2:8006 or https://[fd00::2]:8006
+    # On Linux host, you can access this node directly via hostname or IP address,
+    # e.g. https://pve-2:8006 or https://[fd00::2]:8006
     ports:
       - "2223:22"
       - "3129:3128"
@@ -123,7 +125,8 @@ services:
         ipv6_address: fd00::3
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address, e.g. https://pve-3:8006 or https://[fd00::3]:8006
+    # On Linux host, you can access this node directly via hostname or IP address,
+    # e.g. https://pve-3:8006 or https://[fd00::3]:8006
     ports:
       - "2224:22"
       - "3130:3128"
@@ -157,7 +160,8 @@ services:
         ipv6_address: fd00::4
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this container directly via hostname or IP address, e.g. https://pdm:8443 or https://[fd00::4]:8443
+    # On Linux host, you can access this container directly via hostname or IP address,
+    # e.g. https://pdm:8443 or https://[fd00::4]:8443
     ports:
       - "2225:22"
       - "8443:8443"
