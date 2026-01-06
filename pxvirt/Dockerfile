@@ -1,4 +1,4 @@
-# Pxvirt (Proxmox VE for arm64) Container Dockerfile
+# PXVIRT (Proxmox VE for arm64) Container Dockerfile
 #
 # SPDX-License-Identifier: GPLv3 or later
 # Copyright (C) 2025-2026 LongQT-sea
@@ -77,7 +77,7 @@ apt clean
 rm -rf /var/lib/apt/lists/*
 EOF
 
-# Add Pxvirt repository
+# Add PXVIRT repository
 RUN <<EOF
 curl -sL https://mirrors.lierfang.com/pxcloud/lierfang.gpg \
     -o /etc/apt/trusted.gpg.d/lierfang.gpg
@@ -98,7 +98,7 @@ Pin: release *
 Pin-Priority: -1
 EOF
 
-# Install Pxvirt
+# Install PXVIRT
 RUN <<EOF
 set -e
 apt update

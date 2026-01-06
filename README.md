@@ -1,13 +1,18 @@
-# Overview
-Proxmox cluster in Docker. Learn, test, break, repeat.
+## Overview
+### Proxmox cluster in Docker. Learn, test, break, repeat.
+
+This project provides containerized Proxmox Virtual Environment for development, testing, and learning purposes. Spin up single nodes or entire HA clusters in seconds—perfect for validating infrastructure-as-code, testing failover scenarios, or exploring Proxmox features without dedicated hardware.
+
+## Features
 
 - **Fast iteration** — Spin up, tear down, repeat in seconds
 - **Cluster simulation** — Test HA, failover, and live migration
 - **Automation testing** — Validate Terraform, Ansible, or scripts
-- **Shared storage** — Mount ISOs, backups, disk images volume across nodes
-- **KVM and LXC** — Works out of the box
-- **Central management** — [Proxmox Datacenter Manager](proxmox-datacenter-manager) in Docker
-- **[ARM64 support](pxvirt)** — Run Proxmox VE on your favorite ARM platform, powered by [PXVIRT](https://docs.pxvirt.lierfang.com/en/README.html)
+- **Shared storage** — Mount ISOs, backups, and disk images across all nodes
+- **Dual-Stack Networking** — IPv4 and IPv6 support with pre-configured NAT bridges
+- **KVM and LXC support** — Works out of the box
+- **Central management** — Optional [Proxmox Datacenter Manager](proxmox-datacenter-manager) container included
+- **[ARM64 support](pxvirt)** — Proxmox VE on your favorite ARM platform, powered by [PXVIRT](https://docs.pxvirt.lierfang.com/en/README.html)
 
 ---
 
@@ -17,10 +22,16 @@ Proxmox cluster in Docker. Learn, test, break, repeat.
 - [Docker Engine](https://docs.docker.com/engine/install/)
 - CPU with virtualization support (Intel VT-x / AMD-V)
 
+> [!Note]
+> Docker Desktop required nested virtualization, e.g. WSL2: [nestedVirtualization](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#main-wsl-settings)
+
 ---
 
 ## Quick Start
 Standalone node with `docker run`:
+> [!Note]
+> For ARM64 platforms (Apple Silicon, Raspberry Pi 5, Ampere, AWS Graviton .metal),
+> replace `proxmox-ve` with `proxmox-ve-arm64`
 ```bash
 docker run -d --name pve-1 --hostname pve-1 \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
@@ -41,12 +52,12 @@ docker exec -it pve-1 passwd
 docker restart pve-1
 ```
 
-Access the web UI at `https://Docker-IP:8006` (accept the self-signed cert).
+Access the web UI at `https://localhost:8006/` (accept the self-signed cert).
 
 ---
 
-## Multi-Node Cluster with Docker Compose (recommended)
-A 3-node HA cluster sharing ISOs and backups setup:
+## Multi-Node Cluster
+Deploy a production-like 3-node HA cluster with shared storage using Docker Compose:
 ```
 mkdir pve_cluster && cd pve_cluster
 
@@ -70,19 +81,17 @@ services:
         ipv6_address: fd00::1
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via hostname or IP address:
-    # https://10.0.99.1:8006 or https://[fd00::1]:8006
     ports:
       - "2222:22"
       - "3128:3128"
-      - "8006:8006"   # First node Web GUI is listening on port 8006
+      - "8006:8006"   # First node container port 8006 maps to host port 8006
 
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup
-      - /usr/lib/modules:/usr/lib/modules:ro
-      - /sys/kernel/security:/sys/kernel/security
-      - ./VM-Backup:/var/lib/vz/dump
-      - ./ISOs:/var/lib/vz/template/iso  # Replace ./ISOs with the path to your ISO folder
+      - /sys/fs/cgroup:/sys/fs/cgroup               # Required for systemd init
+      - /usr/lib/modules:/usr/lib/modules:ro        # Required for loading kernel modules
+      - /sys/kernel/security:/sys/kernel/security   # Optional, needed for LXC
+      - ./VM-Backup:/var/lib/vz/dump                # Shared storage for VM/LXC backups
+      - ./ISOs:/var/lib/vz/template/iso             # Shared storage for ISO files
 
 
   # Second node
@@ -99,19 +108,17 @@ services:
         ipv6_address: fd00::2
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via IP address:
-    # https://10.0.99.2:8006 or https://[fd00::2]:8006
     ports:
       - "2223:22"
       - "3129:3128"
-      - "8007:8006"   # Second node Web GUI is listening on port 8007
+      - "8007:8006"   # Second node container port 8006 maps to host port 8007
 
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup
-      - /usr/lib/modules:/usr/lib/modules:ro
-      - /sys/kernel/security:/sys/kernel/security
-      - ./VM-Backup:/var/lib/vz/dump
-      - ./ISOs:/var/lib/vz/template/iso  # Replace ./ISOs with the path to your ISO folder
+      - /sys/fs/cgroup:/sys/fs/cgroup               # Required for systemd init
+      - /usr/lib/modules:/usr/lib/modules:ro        # Required for loading kernel modules
+      - /sys/kernel/security:/sys/kernel/security   # Optional, needed for LXC
+      - ./VM-Backup:/var/lib/vz/dump                # Shared storage for VM/LXC backups
+      - ./ISOs:/var/lib/vz/template/iso             # Shared storage for ISO files
 
 
   # Third node
@@ -128,19 +135,17 @@ services:
         ipv6_address: fd00::3
 
     # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this node directly via IP address:
-    # https://10.0.99.3:8006 or https://[fd00::3]:8006
     ports:
       - "2224:22"
       - "3130:3128"
-      - "8008:8006"   # Third node Web GUI is listening on port 8008
+      - "8008:8006"   # Third node container port 8006 maps to host port 8008
 
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup
-      - /usr/lib/modules:/usr/lib/modules:ro
-      - /sys/kernel/security:/sys/kernel/security
-      - ./VM-Backup:/var/lib/vz/dump
-      - ./ISOs:/var/lib/vz/template/iso  # Replace ./ISOs with the path to your ISO folder
+      - /sys/fs/cgroup:/sys/fs/cgroup               # Required for systemd init
+      - /usr/lib/modules:/usr/lib/modules:ro        # Required for loading kernel modules
+      - /sys/kernel/security:/sys/kernel/security   # Optional, needed for LXC
+      - ./VM-Backup:/var/lib/vz/dump                # Shared storage for VM/LXC backups
+      - ./ISOs:/var/lib/vz/template/iso             # Shared storage for ISO files
 
 
   # Optional: Proxmox Datacenter Manager
@@ -150,24 +155,22 @@ services:
     hostname: pdm
     restart: unless-stopped
     cgroup: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+    cap_add:
+      - ALL
     security_opt:
       - seccomp=unconfined
       - apparmor=unconfined
-    cap_add:
-      - ALL
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup
     networks:
       dual_stack:
         ipv4_address: 10.0.99.4
         ipv6_address: fd00::4
 
-    # Port mapping only required for Docker Desktop or LAN access from other machines.
-    # On Linux host, you can access this container directly via IP address:
-    # https://10.0.99.4:8443 or https://[fd00::4]:8443
     ports:
       - "2225:22"
       - "8443:8443"
+
 
 # Dual-stack network for this cluster
 networks:
@@ -184,18 +187,23 @@ Bring it up:
 ```
 docker compose up -d
 ```
+
 Set root password for all nodes:
 ```
 docker exec -it pve-1 passwd
 docker exec -it pve-2 passwd
 docker exec -it pve-3 passwd
 ```
+
 Restart all nodes at least once:
 ```
-docker restart -t 5 pve-1 pve-2 pve-3
+docker restart pve-1 pve-2 pve-3
 ```
+
 > [!Tip]
-> On Docker Desktop (Windows/macOS), use different browser profiles for each node to avoid cookie clashing ("invalid PVE ticket 401" error).
+> On Linux hosts, access nodes directly via their container IPs (e.g., `https://10.0.99.1:8006` or `https://[fd00::1]:8006`).
+> 
+> On Docker Desktop (Windows/macOS), use separate browser profiles for each node to avoid authentication conflicts ("invalid PVE ticket 401" errors caused by cookie collisions).
 
 Nodes can reach each other over hostname or IP address:
 | hostname | IPv4       | IPv6    |
@@ -216,7 +224,7 @@ docker compose down -t 0
 
 | Port | Purpose |
 |------|--------------|
-| 8006 | Web UI |
+| 8006 | PVE Web UI |
 | 3128 | SPICE proxy |
 | 22 | SSH |
 | 8443 | PDM Web UI |
@@ -246,6 +254,8 @@ docker compose down -t 0
 ## License
 
 This project is licensed under the GPLv3 or later (see [LICENSE](LICENSE) file).
+
+---
 
 ## Disclaimer
 
