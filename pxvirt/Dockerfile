@@ -146,12 +146,9 @@ EOF
 RUN <<EOF
 gpg --keyserver keyserver.ubuntu.com --recv-keys \
     39DE63C7D57A32124785E63DB859507D6B1F46D3 \
-    A7BCD1420BFE778E \
-    85C25E95A16EB94D
+
 gpg --export \
     39DE63C7D57A32124785E63DB859507D6B1F46D3 \
-    A7BCD1420BFE778E \
-    85C25E95A16EB94D \
     > /usr/share/doc/pve-manager/trustedkeys.gpg
 rm -rf /root/.gnupg
 EOF
@@ -312,6 +309,12 @@ for i in $(seq 0 50); do
     mknod -m 0660 /dev/loop$i b 7 $i
   fi
 done
+
+# Update arm64 LXC template
+pveam update 2>/dev/null
+
+# Remove unsupported amd64 turnkeylinux repo
+rm -f /var/lib/pve-manager/apl-info/releases.turnkeylinux.org
 
 exit 0
 EOF1
