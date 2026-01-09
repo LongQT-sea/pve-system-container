@@ -147,6 +147,20 @@ systemctl mask \
     watchdog-mux.service
 EOF
 
+# Add signing keys to trustedkeys.gpg keyring for pveam
+RUN <<EOF
+gpg --keyserver keyserver.ubuntu.com --recv-keys \
+    39DE63C7D57A32124785E63DB859507D6B1F46D3 \
+    A7BCD1420BFE778E \
+    85C25E95A16EB94D
+gpg --export \
+    39DE63C7D57A32124785E63DB859507D6B1F46D3 \
+    A7BCD1420BFE778E \
+    85C25E95A16EB94D \
+    > /usr/share/doc/pve-manager/trustedkeys.gpg
+rm -rf /root/.gnupg
+EOF
+
 # Prevent Docker DNS NAT rules from being flushed when using user-defined bridge
 RUN systemctl mask nftables.service
 

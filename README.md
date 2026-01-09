@@ -209,7 +209,7 @@ Set root password for all nodes:
 > |------------|---------------------|----------|
 > | Docker Engine (Linux) | Access nodes directly via container IPs | `https://[fd00::1]:8006`<br>`https://[fd00::2]:8006`<br>`https://[fd00::3]:8006` |
 > | Docker Desktop (Windows) | Use different loopback address | `https://127.0.0.1:8006`<br>`https://127.0.0.2:8007`<br>`https://127.0.0.3:8008` |
-> | Docker Desktop (macOS) | Use separate browser profile for each node | `Multiple Chrome profile`<br>`Or different browser`<br> |
+> | OrbStack (macOS) | Use separate browser profile for each node | `Multiple Chrome profile`<br>`Or different browser`<br> |
 
 > [!Note]
 > To create the cluster, go to **System → Network** on **pve-1** node, edit `eth0` interface as shown in the image below.
